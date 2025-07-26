@@ -1,0 +1,181 @@
+# Spring Boot PlantUML Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /plantuml
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+    include-exception: false
+
+spring:
+  application:
+    name: plantuml-server
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+      file-size-threshold: 1MB
+      location: ${java.io.tmpdir}/plantuml-uploads
+  
+  security:
+    user:
+      name: admin
+      password: ${ADMIN_PASSWORD:admin123}
+      roles: ADMIN
+  
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+  
+  cache:
+    type: simple
+    cache-names:
+      - plantuml-diagrams
+      - processed-markdown
+
+# Application specific configuration
+plantuml:
+  server:
+    # File upload restrictions
+    upload:
+      max-file-size: 10MB
+      allowed-extensions: 
+        - .md
+        - .markdown
+        - .txt
+      max-plantuml-blocks-per-file: 50
+    
+    # PlantUML processing configuration
+    processing:
+      default-format: SVG
+      enable-caching: true
+      cache-ttl: 1h
+      max-processing-time: 30s
+      
+    # Output configuration
+    output:
+      zip-compression-level: 6
+      svg-embed-fonts: false
+      include-source-in-zip: true
+
+# Logging configuration
+logging:
+  level:
+    com.example.plantuml: INFO
+    org.springframework.security: WARN
+    org.springframework.web: WARN
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/plantuml-server.log
+    max-size: 10MB
+    max-history: 10
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
+      percentiles-histogram:
+        http.server.requests: true
+
+# Info for actuator
+info:
+  app:
+    name: ${spring.application.name}
+    version: '@project.version@'
+    description: '@project.description@'
+    java:
+      version: '@java.version@'
+    plantuml:
+      version: '@plantuml.version@'
+
+---
+# Development profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  security:
+    user:
+      password: dev123
+
+logging:
+  level:
+    com.example.plantuml: DEBUG
+    org.springframework.web: DEBUG
+
+plantuml:
+  server:
+    processing:
+      enable-caching: false
+
+---
+# Production profile  
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  security:
+    user:
+      password: ${ADMIN_PASSWORD}
+
+server:
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+
+logging:
+  level:
+    root: WARN
+    com.example.plantuml: INFO
+
+plantuml:
+  server:
+    processing:
+      enable-caching: true
+      cache-ttl: 24h
+
+---
+# Docker profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+server:
+  port: 8080
+
+logging:
+  level:
+    root: INFO

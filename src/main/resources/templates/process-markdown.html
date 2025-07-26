@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
+    <title th:text="${title}">Markdown PlantUML Processor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .upload-area {
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #0056b3;
+            background-color: #e9ecef;
+        }
+        .upload-area.dragover {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .file-info {
+            background-color: #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}">PlantUML Server</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" th:href="@{/}">Generator</a>
+                <a class="nav-link active" th:href="@{/process-markdown}">Markdown Processor</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h1 class="mb-4">Markdown PlantUML Processor</h1>
+                <p class="lead">Upload a markdown file containing PlantUML blocks to generate processed content with diagram images.</p>
+                
+                <!-- How it works -->
+                <div class="alert alert-info">
+                    <h5 class="alert-heading">How it works:</h5>
+                    <ol class="mb-0">
+                        <li>Upload a markdown file containing PlantUML code blocks</li>
+                        <li>The server will process each <code>```plantuml</code> block</li>
+                        <li>Generate SVG/PNG images for each diagram</li>
+                        <li>Replace code blocks with image links</li>
+                        <li>Download a ZIP file containing the processed markdown and images</li>
+                    </ol>
+                </div>
+                
+                <!-- Upload Form -->
+                <div class="card">
+                    <div class="card-body">
+                        <form id="markdownForm" enctype="multipart/form-data">
+                            <div class="upload-area" id="uploadArea">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                <h5>Drop your markdown file here</h5>
+                                <p class="text-muted">or click to browse</p>
+                                <input type="file" id="markdownFile" name="markdown_file" 
+                                       accept=".md,.markdown,.txt" required style="display: none;">
+                            </div>
+                            
+                            <div id="fileInfo" class="file-info" style="display: none;"></div>
+                            
+                            <div class="text-center mt-4">
+                                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg" disabled>
+                                    <span class="spinner-border spinner-border-sm me-2" id="loading" style="display: none;"></span>
+                                    Process Markdown
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Example -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Example PlantUML Block</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre><code>```plantuml
+@startuml
+Alice -> Bob : Hello
+Bob -> Alice : Hi there!
+@enduml
+```</code></pre>
+                        <small class="text-muted">
+                            This block will be converted to an image reference like: <code>![PlantUML Diagram 1](diagrams/filename_diagram_1.svg)</code>
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Features -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-shield-alt fa-2x text-success mb-3"></i>
+                                <h6>Secure Processing</h6>
+                                <small class="text-muted">File validation and security checks</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-archive fa-2x text-info mb-3"></i>
+                                <h6>ZIP Download</h6>
+                                <small class="text-muted">Everything packaged in a convenient ZIP file</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-image fa-2x text-warning mb-3"></i>
+                                <h6>Multiple Formats</h6>
+                                <small class="text-muted">Support for SVG, PNG, and more</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-kit-id.js" crossorigin="anonymous"></script>
+    <script>
+        // CSRF token handling
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('markdownFile');
+        const fileInfo = document.getElementById('fileInfo');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const form = document.getElementById('markdownForm');
+        
+        // Upload area click handler
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                showFileInfo(files[0]);
+            }
+        });
+        
+        // File input change handler
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                showFileInfo(e.target.files[0]);
+            }
+        });
+        
+        // Show file information
+        function showFileInfo(file) {
+            const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileInfo.innerHTML = `
+                <strong>Selected file:</strong> ${file.name}<br>
+                <strong>Size:</strong> ${sizeInMB} MB<br>
+                <strong>Type:</strong> ${file.type || 'text/plain'}
+            `;
+            fileInfo.style.display = 'block';
+            submitBtn.disabled = false;
+        }
+        
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!fileInput.files[0]) {
+                showAlert('Please select a file first');
+                return;
+            }
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            loading.style.display = 'inline-block';
+            
+            try {
+                const formData = new FormData();
+                formData.append('markdown_file', fileInput.files[0]);
+                
+                const headers = {};
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+                
+                const response = await fetch('/plantuml/api/process-markdown', {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    // Get the filename from the response headers
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    const filename = contentDisposition 
+                        ? contentDisposition.split('filename=')[1].replace(/"/g, '')
+                        : 'processed.zip';
+                    
+                    // Download the file
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                    
+                    showAlert('File processed successfully! Download should start automatically.', 'success');
+                } else {
+                    const errorText = await response.text();
+                    showAlert('Error: ' + errorText);
+                }
+            } catch (error) {
+                showAlert('Network error: ' + error.message);
+            } finally {
+                // Hide loading state
+                submitBtn.disabled = false;
+                loading.style.display = 'none';
+            }
+        });
+        
+        // Utility function for alerts
+        function showAlert(message, type = 'danger') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

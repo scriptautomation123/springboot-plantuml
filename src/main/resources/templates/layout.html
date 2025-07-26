@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">PlantUML Server</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .code-editor {
+            font-family: 'Courier New', monospace;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .result-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #ddd;
+            margin-top: 50px;
+        }
+        .example-code {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 0.375rem;
+            padding: 1rem;
+        }
+        .loading {
+            display: none;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-project-diagram me-2"></i>PlantUML Server
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${pageType == 'generator'} ? 'active'" href="/">
+                            Diagram Generator
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${pageType == 'processor'} ? 'active'" href="/process-markdown">
+                            Markdown Processor
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${pageType == 'about'} ? 'active'" href="/about">
+                            About
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        <div layout:fragment="content">
+            <!-- Content will be replaced by specific pages -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer py-3">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        © 2025 PlantUML Server - Built with Spring Boot 3 & Java 21
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        <a href="/actuator/health" target="_blank" class="text-decoration-none">Health</a> |
+                        <a href="/actuator/info" target="_blank" class="text-decoration-none">Info</a> |
+                        <a href="https://plantuml.com" target="_blank" class="text-decoration-none">PlantUML</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-kit-id.js" crossorigin="anonymous"></script>
+    
+    <script>
+        // Common utility functions
+        function showLoading(element) {
+            element.style.display = 'block';
+        }
+        
+        function hideLoading(element) {
+            element.style.display = 'none';
+        }
+        
+        function showAlert(message, type = 'danger') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        // CSRF token handling for Spring Security
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+        
+        if (csrfToken && csrfHeader) {
+            // Set default headers for fetch requests
+            const originalFetch = window.fetch;
+            window.fetch = function(url, options = {}) {
+                if (!options.headers) {
+                    options.headers = {};
+                }
+                options.headers[csrfHeader] = csrfToken;
+                return originalFetch(url, options);
+            };
+        }
+    </script>
+    
+    <!-- Page-specific scripts -->
+    <div layout:fragment="scripts">
+        <!-- Scripts will be replaced by specific pages -->
+    </div>
+</body>
+</html>
