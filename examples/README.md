@@ -31,12 +31,11 @@ mvn exec:java -Dexec.mainClass="com.example.plantuml.examples.StandaloneExample"
 ### Option 2: Direct Java Execution
 
 ```bash
-# Build the project
+# Build the project with all dependencies
 mvn clean package -DskipTests
 
-# Run directly with Java
-java -cp "target/springboot-plantuml-server-1.0.0.jar" \
-     com.example.plantuml.examples.StandaloneExample
+# Note: For running directly with java command, you'll need all dependencies in the classpath.
+# It's recommended to use the Maven exec plugin (Option 1) for simplicity.
 ```
 
 ### Option 3: Copy and Use in Your Project

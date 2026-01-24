@@ -189,17 +189,19 @@ public class PlantUMLLibrary {
     }
     
     private void validatePlantUMLCode(String code) throws PlantUMLException {
+        String lowerCode = code.toLowerCase();
+        
         // Security: Check for potentially dangerous directives
-        if (code.contains("!include") && code.contains("..")) {
+        if (lowerCode.contains("!include") && code.contains("..")) {
             throw new PlantUMLException("Path traversal in !include directive not allowed");
         }
         
-        if (code.contains("!define") && code.contains("java")) {
+        if (lowerCode.contains("!define") && lowerCode.contains("java")) {
             throw new PlantUMLException("Java execution in !define not allowed");
         }
         
         // Basic syntax validation
-        if (!code.contains("@start") || !code.contains("@end")) {
+        if (!lowerCode.contains("@start") || !lowerCode.contains("@end")) {
             throw new PlantUMLException("PlantUML code must contain @start/@end tags");
         }
         
@@ -214,7 +216,8 @@ public class PlantUMLLibrary {
             return FileFormat.SVG;
         }
         
-        return switch (format.toUpperCase()) {
+        String normalizedFormat = format.trim().toUpperCase();
+        return switch (normalizedFormat) {
             case "PNG" -> FileFormat.PNG;
             case "SVG" -> FileFormat.SVG;
             case "EPS" -> FileFormat.EPS;

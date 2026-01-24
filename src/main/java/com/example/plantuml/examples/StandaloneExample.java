@@ -16,7 +16,7 @@ import java.nio.file.Paths;
  * <p>To run this example:
  * <ol>
  *   <li>Build the project: mvn clean package -DskipTests</li>
- *   <li>Run: java -cp target/springboot-plantuml-server-1.0.0.jar:path/to/plantuml.jar com.example.plantuml.examples.StandaloneExample</li>
+ *   <li>Run: mvn exec:java -Dexec.mainClass="com.example.plantuml.examples.StandaloneExample"</li>
  * </ol>
  * 
  * @author Principal Engineer
