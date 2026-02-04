@@ -25,8 +25,6 @@ Files.write(Path.of("diagram.png"), diagram);
 - Direct programmatic control
 - Minimal dependencies
 
-[📚 Library Documentation](LIBRARY-USAGE.md) | [💡 Examples](examples/README.md)
-
 ### 2. Server Mode
 Full-featured web application with REST API:
 
@@ -41,8 +39,6 @@ mvn spring-boot:run
 - REST API integration
 - File upload and processing
 
-[📖 Server Documentation](usage.md)
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -54,9 +50,9 @@ mvn spring-boot:run
 **1. Add to your `pom.xml`:**
 ```xml
 <dependency>
-    <groupId>com.example</groupId>
-    <artifactId>springboot-plantuml-server</artifactId>
-    <version>1.0.0</version>
+  <groupId>com.example</groupId>
+  <artifactId>springboot-plantuml-server</artifactId>
+  <version>1.0.0</version>
 </dependency>
 ```
 
@@ -66,11 +62,11 @@ PlantUMLLibrary library = new PlantUMLLibrary();
 
 // Generate PNG
 byte[] png = library.generatePng("""
-    @startuml
-    Alice -> Bob: Hello
-    Bob -> Alice: Hi!
-    @enduml
-    """);
+  @startuml
+  Alice -> Bob: Hello
+  Bob -> Alice: Hi!
+  @enduml
+  """);
 
 // Generate SVG
 byte[] svg = library.generateSvg(plantUMLCode);
@@ -79,7 +75,7 @@ byte[] svg = library.generateSvg(plantUMLCode);
 ProcessedMarkdown result = library.processMarkdown(markdownContent);
 ```
 
-**No Spring dependencies needed!** See [LIBRARY-USAGE.md](LIBRARY-USAGE.md) for complete guide.
+**No Spring dependencies needed.**
 
 ### Server Mode
 
@@ -97,17 +93,15 @@ java -jar target/springboot-plantuml-server-1.0.0.jar
 ```bash
 # Process markdown file
 curl -X POST -F "markdown_file=@document.md" \
-     -o result.zip \
-     http://localhost:8080/plantuml/api/process-markdown
+   -o result.zip \
+   http://localhost:8080/plantuml/api/process-markdown
 
 # Generate diagram
 curl -X POST \
-     -d "text=@startuml\nAlice->Bob\n@enduml" \
-     -d "format=svg" \
-     http://localhost:8080/plantuml/api/generate
+   -d "text=@startuml\nAlice->Bob\n@enduml" \
+   -d "format=svg" \
+   http://localhost:8080/plantuml/api/generate
 ```
-
-See [usage.md](usage.md) for server documentation.
 
 ## 📦 Features
 
@@ -127,99 +121,282 @@ See [usage.md](usage.md) for server documentation.
 ✅ **Caching** - Improve performance  
 ✅ **Docker support** - Easy deployment  
 
-## 🔧 Configuration
+## 🔧 Library Usage (Complete)
 
-### Library Configuration
+### Basic Usage
+
+#### 1. Generate PNG Diagram
 
 ```java
+import com.example.plantuml.PlantUMLLibrary;
+
+public class Example {
+  public static void main(String[] args) throws Exception {
+    PlantUMLLibrary library = new PlantUMLLibrary();
+        
+    String plantUMLCode = """
+      @startuml
+      Alice -> Bob: Hello
+      Bob -> Alice: Hi there!
+      @enduml
+      """;
+        
+    byte[] pngData = library.generatePng(plantUMLCode);
+    Files.write(Path.of("diagram.png"), pngData);
+  }
+}
+```
+
+#### 2. Generate SVG Diagram
+
+```java
+import com.example.plantuml.PlantUMLLibrary;
+
+PlantUMLLibrary library = new PlantUMLLibrary();
+
+String plantUMLCode = """
+  @startuml
+  class User {
+    +String name
+    +String email
+    +login()
+    +logout()
+  }
+  @enduml
+  """;
+
+byte[] svgData = library.generateSvg(plantUMLCode);
+Files.write(Path.of("diagram.svg"), svgData);
+```
+
+#### 3. Process Markdown with PlantUML Blocks
+
+```java
+import com.example.plantuml.PlantUMLLibrary;
+import com.example.plantuml.PlantUMLLibrary.ProcessedMarkdown;
+import com.example.plantuml.PlantUMLLibrary.DiagramInfo;
+
+PlantUMLLibrary library = new PlantUMLLibrary();
+
+String markdownContent = """
+  # My Documentation
+    
+  ## Architecture Diagram
+    
+  ```plantuml
+  @startuml
+  [User] --> [Application]
+  [Application] --> [Database]
+  @enduml
+  ```
+    
+  ## Sequence Diagram
+    
+  ```plantuml
+  @startuml
+  User -> System: Request
+  System -> Database: Query
+  Database -> System: Result
+  System -> User: Response
+  @enduml
+  ```
+  """;
+
+ProcessedMarkdown result = library.processMarkdown(markdownContent);
+
+String processedContent = result.processedContent();
+System.out.println("Processed markdown:\n" + processedContent);
+
+for (DiagramInfo diagram : result.diagrams()) {
+  Files.write(Path.of(diagram.fileName()), diagram.data());
+}
+
+System.out.println("Total blocks processed: " + result.totalBlocks());
+```
+
+#### 4. Custom Configuration
+
+```java
+import com.example.plantuml.PlantUMLLibrary;
+import net.sourceforge.plantuml.FileFormat;
+
 PlantUMLLibrary.Config config = new PlantUMLLibrary.Config()
-    .withDefaultFormat(FileFormat.PNG)
-    .withMaxBlocksPerFile(100)
-    .withMaxCodeSize(100_000)
-    .withValidation(true);
+  .withDefaultFormat(FileFormat.PNG)
+  .withMaxBlocksPerFile(100)
+  .withMaxCodeSize(100_000)
+  .withValidation(true);
 
 PlantUMLLibrary library = new PlantUMLLibrary(config);
+byte[] diagram = library.generatePng(plantUMLCode);
 ```
 
-### Server Configuration
-
-Edit `src/main/resources/application.yml`:
-
-```yaml
-plantuml:
-  upload:
-    max-file-size: 10MB
-    allowed-extensions: [.md, .markdown]
-    max-plantuml-blocks-per-file: 50
-  processing:
-    default-format: SVG
-```
-
-## 📋 Examples
-
-### Library Examples
+#### 5. Different Output Formats
 
 ```java
-// Example 1: Simple diagram generation
 PlantUMLLibrary library = new PlantUMLLibrary();
-byte[] png = library.generatePng("@startuml\nAlice -> Bob\n@enduml");
-Files.write(Path.of("diagram.png"), png);
 
-// Example 2: Process markdown
-String markdown = """
-    # Documentation
-    ```plantuml
-    @startuml
-    [User] --> [System]
-    @enduml
-    ```
-    """;
-ProcessedMarkdown result = library.processMarkdown(markdown);
+String code = "@startuml\nAlice -> Bob\n@enduml";
 
-// Example 3: Custom format
+byte[] png = library.generateDiagram(code, "PNG");
 byte[] svg = library.generateDiagram(code, "SVG");
 byte[] pdf = library.generateDiagram(code, "PDF");
+byte[] eps = library.generateDiagram(code, "EPS");
 ```
 
-More examples in [examples/](examples/) directory.
+### Complete Example
 
-### Server Examples
+```java
+import com.example.plantuml.PlantUMLLibrary;
+import com.example.plantuml.PlantUMLLibrary.ProcessedMarkdown;
+import com.example.plantuml.PlantUMLLibrary.DiagramInfo;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-```bash
-# Health check
-curl http://localhost:8080/plantuml/api/health
-
-# Generate diagram
-curl -X POST \
-  -d "text=@startuml\nclass User\n@enduml" \
-  -d "format=png" \
-  http://localhost:8080/plantuml/api/generate
-
-# Process markdown
-curl -X POST \
-  -F "markdown_file=@README.md" \
-  -o output.zip \
-  http://localhost:8080/plantuml/api/process-markdown
+public class PlantUMLLibraryExample {
+    
+  public static void main(String[] args) {
+    try {
+      PlantUMLLibrary library = new PlantUMLLibrary();
+            
+      generateSequenceDiagram(library);
+      generateClassDiagram(library);
+      processMarkdownFile(library);
+            
+      System.out.println("All diagrams generated successfully!");
+            
+    } catch (Exception e) {
+      System.err.println("Error: " + e.getMessage());
+      e.printStackTrace();
+    }
+  }
+    
+  private static void generateSequenceDiagram(PlantUMLLibrary library) 
+      throws Exception {
+    String code = """
+      @startuml
+      actor User
+      participant "Web App" as App
+      database "Database" as DB
+            
+      User -> App: Login Request
+      App -> DB: Validate Credentials
+      DB -> App: User Data
+      App -> User: Login Success
+      @enduml
+      """;
+        
+    byte[] png = library.generatePng(code);
+    Files.write(Path.of("sequence-diagram.png"), png);
+    System.out.println("Generated: sequence-diagram.png");
+  }
+    
+  private static void generateClassDiagram(PlantUMLLibrary library) 
+      throws Exception {
+    String code = """
+      @startuml
+      class Vehicle {
+        +String brand
+        +int year
+        +start()
+        +stop()
+      }
+            
+      class Car extends Vehicle {
+        +int doors
+        +openTrunk()
+      }
+            
+      class Motorcycle extends Vehicle {
+        +boolean hasSidecar
+      }
+      @enduml
+      """;
+        
+    byte[] svg = library.generateSvg(code);
+    Files.write(Path.of("class-diagram.svg"), svg);
+    System.out.println("Generated: class-diagram.svg");
+  }
+    
+  private static void processMarkdownFile(PlantUMLLibrary library) 
+      throws Exception {
+    String markdown = """
+      # Project Documentation
+            
+      ## System Architecture
+            
+      ```plantuml
+      @startuml
+      [Frontend] --> [Backend API]
+      [Backend API] --> [Database]
+      [Backend API] --> [Cache]
+      @enduml
+      ```
+      """;
+        
+    ProcessedMarkdown result = library.processMarkdown(markdown);
+        
+    Files.writeString(Path.of("processed.md"), result.processedContent());
+        
+    for (DiagramInfo diagram : result.diagrams()) {
+      Path path = Path.of(diagram.fileName());
+      Files.createDirectories(path.getParent());
+      Files.write(path, diagram.data());
+      System.out.println("Generated: " + diagram.fileName());
+    }
+  }
+}
 ```
 
-## 🏗️ Architecture
+## ⚙️ Library Configuration Options
+
+### Config Builder Methods
+
+| Method | Description | Default |
+|--------|-------------|---------|
+| `withDefaultFormat(FileFormat)` | Set default output format | `SVG` |
+| `withMaxBlocksPerFile(int)` | Max PlantUML blocks per markdown file | `50` |
+| `withMaxCodeSize(int)` | Max PlantUML code size in bytes | `50,000` |
+| `withValidation(boolean)` | Enable/disable code validation | `true` |
+
+### Supported Output Formats
+
+- **PNG** - Portable Network Graphics (raster)
+- **SVG** - Scalable Vector Graphics (vector)
+- **PDF** - Portable Document Format
+- **EPS** - Encapsulated PostScript
+
+## ❗ Error Handling
+
+```java
+import com.example.plantuml.PlantUMLLibrary;
+import com.example.plantuml.PlantUMLLibrary.PlantUMLException;
+
+PlantUMLLibrary library = new PlantUMLLibrary();
+
+try {
+  byte[] diagram = library.generatePng(plantUMLCode);
+} catch (PlantUMLException e) {
+  System.err.println("PlantUML Error: " + e.getMessage());
+}
+```
+
+## 🧱 Architecture
 
 ```
 springboot-plantuml/
 ├── src/main/java/com/example/plantuml/
-│   ├── PlantUMLLibrary.java          # ⭐ Standalone library (no Spring)
+│   ├── PlantUMLLibrary.java           # ⭐ Standalone library (no Spring)
 │   ├── PlantUMLServerApplication.java # Spring Boot main class
-│   ├── service/                       # Business logic (Spring)
+│   ├── service/                        # Business logic (Spring)
 │   │   ├── PlantUMLService.java
 │   │   ├── MarkdownProcessingService.java
 │   │   └── ...
-│   └── controller/                    # REST controllers (Spring)
-├── examples/                          # Standalone examples
+│   └── controller/                     # REST controllers (Spring)
+├── examples/                           # Standalone examples
 │   ├── StandaloneExample.java
 │   └── README.md
-├── pom.xml                            # Maven config (Spring = optional)
-├── LIBRARY-USAGE.md                   # Library documentation
-└── usage.md                           # Server documentation
+├── pom.xml                             # Maven config (Spring = optional)
+└── usage.md                            # Server documentation
 ```
 
 **Key Design:**
@@ -238,8 +415,6 @@ springboot-plantuml/
 | **Integration** | `import` in code | HTTP API |
 | **Config** | Java builder | YAML files |
 | **Use Case** | Embedded, tools | Service, web app |
-
-Choose based on your needs!
 
 ## 🧪 Testing
 
@@ -272,30 +447,41 @@ docker-compose up
 ```
 
 ### Library Mode
-Just use as a regular Java dependency - no Docker needed!
+Just use as a regular Java dependency - no Docker needed.
 
-## 📚 Documentation
+## ✅ Refactoring Summary (Library Option)
 
-- **[LIBRARY-USAGE.md](LIBRARY-USAGE.md)** - Complete library guide
-- **[usage.md](usage.md)** - Server usage guide  
-- **[examples/](examples/)** - Code examples
-- **[PlantUML Docs](https://plantuml.com/)** - PlantUML syntax
+### What Was Done
+- **Created `PlantUMLLibrary`**: standalone facade with zero Spring dependencies.
+- **Made Spring dependencies optional** in `pom.xml` so library users only pull PlantUML.
+- **Added examples** including a full standalone example.
+- **Improved validation** with case-insensitive security checks.
+- **Documented thoroughly** with usage guides and examples.
 
-## 🛠️ Development
+### Design Principles Applied
+- **Not over-engineered**: single facade, no unnecessary abstractions.
+- **Separation of concerns**: server mode unchanged, library mode independent.
+- **Backward compatible**: no breaking changes for server users.
+- **Security-conscious**: input validation and safe defaults.
+- **Thread-safe**: safe for concurrent usage.
 
-```bash
-# Build
-mvn clean package
+### Benefits Delivered
 
-# Run in dev mode
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+**For library users**
+- Zero Spring dependencies
+- Instant startup, minimal overhead
+- Simple, type-safe API
+- Markdown processing support
 
-# Format code
-mvn spotless:apply
+**For server users**
+- No breaking changes
+- Same REST endpoints and UI
+- Same Docker and deployment flows
 
-# Check dependencies
-mvn dependency:tree
-```
+**For maintainers**
+- One codebase, two modes
+- Clear documentation and examples
+- Easy to test independently
 
 ## 📄 License
 
@@ -308,16 +494,6 @@ Contributions welcome! Please:
 2. Create a feature branch
 3. Make your changes
 4. Submit a pull request
-
-## 💡 Why This Project?
-
-**Problem:** Existing PlantUML solutions require running a server or complex setup.
-
-**Solution:** This project offers flexibility:
-- **Need a library?** Import and use directly in code
-- **Need a service?** Deploy as a web application
-
-One codebase, two modes - choose what fits your needs!
 
 ## 🔗 Links
 
