@@ -54,5 +54,16 @@
 
   "remoteUser": "vscode",
 
-  "postCreateCommand": "bash -c 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k && sed -i \"s/ZSH_THEME=\\\"robbyrussell\\\"/ZSH_THEME=\\\"powerlevel10k\\/powerlevel10k\\\"/g\" ~/.zshrc && echo \"POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true\" >> ~/.zshrc && java -version && mvn -version && docker --version && docker compose version'"
+  // Codespace secrets available to this container.
+  // GITHUB_TOKEN is injected automatically by Codespaces with read:packages scope.
+  // To override with a personal access token, create a Codespace secret named
+  // MAVEN_GITHUB_TOKEN at https://github.com/settings/codespaces
+  "secrets": {
+    "MAVEN_GITHUB_TOKEN": {
+      "description": "GitHub personal access token (read:packages scope) used by Maven to download packages from GitHub Packages. Falls back to the auto-injected GITHUB_TOKEN when not set.",
+      "documentationUrl": "https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry#authenticating-with-a-personal-access-token"
+    }
+  },
+
+  "postCreateCommand": "bash -c 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k && sed -i \"s/ZSH_THEME=\\\"robbyrussell\\\"/ZSH_THEME=\\\"powerlevel10k\\/powerlevel10k\\\"/g\" ~/.zshrc && echo \"POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true\" >> ~/.zshrc && bash .devcontainer/setup-maven.sh && java -version && mvn -version && docker --version && docker compose version'"
 }
