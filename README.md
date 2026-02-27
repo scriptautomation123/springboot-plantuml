@@ -47,7 +47,12 @@ mvn spring-boot:run
 
 ### Library Mode
 
-**1. Add to your `pom.xml`:**
+**1. Install the library to your local Maven repository:**
+```bash
+mvn clean install -DskipTests
+```
+
+**2. Add to your `pom.xml`:**
 ```xml
 <dependency>
   <groupId>com.example</groupId>
