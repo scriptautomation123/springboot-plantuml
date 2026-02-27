@@ -49,7 +49,24 @@ mvn spring-boot:run
 
 The library is published automatically to **GitHub Packages** whenever a commit is pushed to `main`.
 
-**1. Authenticate with GitHub Packages** — add your credentials to `~/.m2/settings.xml`:
+**1. Authenticate with GitHub Packages**
+
+**Option A — GitHub Codespaces (recommended, zero secrets to manage)**
+
+`GITHUB_TOKEN` is injected automatically into every Codespace with the
+`read:packages` scope. The devcontainer `postCreateCommand` runs
+`.devcontainer/setup-maven.sh`, which writes `~/.m2/settings.xml` from
+that token automatically — no manual steps required.
+
+If you need a personal access token instead (e.g. for wider scopes), create
+a **Codespace secret** named `MAVEN_GITHUB_TOKEN` at
+<https://github.com/settings/codespaces>. The setup script prefers
+`MAVEN_GITHUB_TOKEN` over the auto-injected `GITHUB_TOKEN` when both are
+present. Your token is **never committed to the repository**.
+
+**Option B — local development**
+
+Add your credentials to `~/.m2/settings.xml` on your local machine:
 ```xml
 <settings>
   <servers>
@@ -63,6 +80,8 @@ The library is published automatically to **GitHub Packages** whenever a commit 
   </servers>
 </settings>
 ```
+> ⚠️ Never commit `~/.m2/settings.xml` or any file containing a raw token
+> to source control.
 
 **2. Add the GitHub Packages repository to your `pom.xml`:**
 ```xml
