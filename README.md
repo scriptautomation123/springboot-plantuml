@@ -47,12 +47,34 @@ mvn spring-boot:run
 
 ### Library Mode
 
-**1. Install the library to your local Maven repository:**
-```bash
-mvn clean install -DskipTests
+The library is published automatically to **GitHub Packages** whenever a commit is pushed to `main`.
+
+**1. Authenticate with GitHub Packages** — add your credentials to `~/.m2/settings.xml`:
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github</id>
+      <username>YOUR_GITHUB_USERNAME</username>
+      <!-- Create a Personal Access Token with read:packages scope at
+           https://github.com/settings/tokens -->
+      <password>YOUR_GITHUB_TOKEN</password>
+    </server>
+  </servers>
+</settings>
 ```
 
-**2. Add to your `pom.xml`:**
+**2. Add the GitHub Packages repository to your `pom.xml`:**
+```xml
+<repositories>
+  <repository>
+    <id>github</id>
+    <url>https://maven.pkg.github.com/scriptautomation123/springboot-plantuml</url>
+  </repository>
+</repositories>
+```
+
+**3. Add the dependency to your `pom.xml`:**
 ```xml
 <dependency>
   <groupId>com.example</groupId>
@@ -61,7 +83,7 @@ mvn clean install -DskipTests
 </dependency>
 ```
 
-**2. Use in your code:**
+**4. Use in your code:**
 ```java
 PlantUMLLibrary library = new PlantUMLLibrary();
 

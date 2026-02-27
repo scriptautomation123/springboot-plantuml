@@ -252,6 +252,14 @@
         </plugins>
     </build>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/scriptautomation123/springboot-plantuml</url>
+        </repository>
+    </distributionManagement>
+
     <profiles>
         <profile>
             <id>dev</id>
